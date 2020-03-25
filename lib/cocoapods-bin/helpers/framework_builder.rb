@@ -45,7 +45,17 @@ module CBin
 
       def build_sim_libraries(defines)
         UI.message 'Building simulator libraries'
-        xcodebuild(defines, '-sdk iphonesimulator', 'build-simulator')
+
+        require 'json'
+        command = "xcodebuild -showsdks -json"
+        output = `#{command}`
+        data = JSON.parse(output)
+        simulators = data.select { |sdk| sdk["platform"] == "iphonesimulator" }
+        
+        simulator = simulators.first()
+        simulatorName = simulator["canonicalName"]
+
+        xcodebuild(defines, "-sdk #{simulatorName} ARCHS='i386 x86_64' ", 'build-simulator')
       end
 
       def copy_headers
@@ -126,19 +136,31 @@ module CBin
         end
       end
 
+      def use_framework
+        return true
+      end
+
       def static_libs_in_sandbox(build_dir = 'build')
-        Dir.glob("#{build_dir}/lib#{target_name}.a")
+        if use_framework
+          Dir.glob("#{build_dir}/#{target_name}.framework/#{target_name}")
+        else
+          Dir.glob("#{build_dir}/lib#{target_name}.a")
+        end
       end
 
       def build_static_library_for_ios(output)
         UI.message "Building ios libraries with archs #{ios_architectures}"
         static_libs = static_libs_in_sandbox('build') + static_libs_in_sandbox('build-simulator') + @vendored_libraries
-        libs = ios_architectures.map do |arch|
-          library = "build/package-#{arch}.a"
-          `libtool -arch_only #{arch} -static -o #{library} #{static_libs.join(' ')}`
-          library
-        end
-
+        
+        if not use_framework
+          libs = ios_architectures.map do |arch|
+            library = "build/package-#{arch}.a"
+            `libtool -arch_only #{arch} -static -o #{library} #{static_libs.join(' ')}`
+            library
+          end
+        else
+          libs = static_libs  
+        end  
         `lipo -create -output #{output} #{libs.join(' ')}`
       end
 
