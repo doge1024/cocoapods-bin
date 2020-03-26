@@ -9,6 +9,7 @@ module CBin
     attr_reader :resources_path
     attr_reader :root_path
     attr_reader :versions_path
+    attr_reader :fwk_path
 
     def initialize(name, platform)
       @name = name

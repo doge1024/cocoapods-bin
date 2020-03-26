@@ -10,12 +10,13 @@ module CBin
     class Builder
       include Pod
 
-      def initialize(spec, file_accessor, platform, source_dir)
+      def initialize(spec, file_accessor, platform, source_dir, use_framework=true)
         @spec = spec
         @source_dir = source_dir
         @file_accessor = file_accessor
         @platform = platform
         @vendored_libraries = (file_accessor.vendored_static_frameworks + file_accessor.vendored_static_libraries).map(&:to_s)
+        @use_framework = use_framework
       end
 
       def build
@@ -23,12 +24,18 @@ module CBin
           defines = compile
 
           build_sim_libraries(defines)
-          output = framework.versions_path + Pathname.new(@spec.name)
-          build_static_library_for_ios(output)
 
-          copy_headers
-          copy_license
-          copy_resources
+          if use_framework
+            output = framework.fwk_path + Pathname.new(@spec.name)
+            build_static_framework_for_ios(output)
+          else
+            output = framework.versions_path + Pathname.new(@spec.name)
+            build_static_library_for_ios(output)
+
+            copy_headers
+            copy_license
+            copy_resources
+          end
 
           cp_to_source_dir
         end
@@ -45,17 +52,7 @@ module CBin
 
       def build_sim_libraries(defines)
         UI.message 'Building simulator libraries'
-
-        require 'json'
-        command = "xcodebuild -showsdks -json"
-        output = `#{command}`
-        data = JSON.parse(output)
-        simulators = data.select { |sdk| sdk["platform"] == "iphonesimulator" }
-        
-        simulator = simulators.first()
-        simulatorName = simulator["canonicalName"]
-
-        xcodebuild(defines, "-sdk #{simulatorName} ARCHS='i386 x86_64' ", 'build-simulator')
+        xcodebuild(defines, '-sdk iphonesimulator', 'build-simulator')
       end
 
       def copy_headers
@@ -137,7 +134,7 @@ module CBin
       end
 
       def use_framework
-        return true
+        return @use_framework
       end
 
       def static_libs_in_sandbox(build_dir = 'build')
@@ -148,19 +145,34 @@ module CBin
         end
       end
 
+      def build_static_framework_for_ios(output)
+        UI.message "Building ios libraries with archs #{ios_architectures}"
+        static_libs = static_libs_in_sandbox('build') + static_libs_in_sandbox('build-simulator') + @vendored_libraries
+
+        # 暂时不过滤 arch, 操作的是framework里面的mach-o文件
+        libs = static_libs
+
+        `rm -rf #{framework.root_path.to_s}/#{target_name}.framework`
+        # 输出之前，先拷贝framework
+        # 模拟器 -> 新建framework
+        `cp -fRap build-simulator/* #{framework.root_path.to_s}/`
+        # 真机 -> 新建framework
+        `cp -fRap build/* #{framework.root_path.to_s}/`
+        `rm -rf #{framework.root_path.to_s}/#{target_name}.framework/_CodeSignature`
+
+        `lipo -create -output #{output} #{libs.join(' ')}`
+      end  
+
       def build_static_library_for_ios(output)
         UI.message "Building ios libraries with archs #{ios_architectures}"
         static_libs = static_libs_in_sandbox('build') + static_libs_in_sandbox('build-simulator') + @vendored_libraries
-        
-        if not use_framework
-          libs = ios_architectures.map do |arch|
-            library = "build/package-#{arch}.a"
-            `libtool -arch_only #{arch} -static -o #{library} #{static_libs.join(' ')}`
-            library
-          end
-        else
-          libs = static_libs  
-        end  
+
+        libs = ios_architectures.map do |arch|
+          library = "build/package-#{arch}.a"
+          `libtool -arch_only #{arch} -static -o #{library} #{static_libs.join(' ')}`
+          library
+        end
+
         `lipo -create -output #{output} #{libs.join(' ')}`
       end
 
