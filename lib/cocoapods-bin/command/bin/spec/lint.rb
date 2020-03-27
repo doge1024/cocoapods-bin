@@ -24,7 +24,8 @@ module Pod
               ['--reserve-created-spec', '保留生成的二进制 spec 文件'],
               ['--code-dependencies', '使用源码依赖进行 lint'],
               ['--loose-options', '添加宽松的 options, 包括 --use-libraries (可能会造成 entry point (start) undefined)'],
-              ['--allow-prerelease', '允许使用 prerelease 的版本 lint']
+              ['--allow-prerelease', '允许使用 prerelease 的版本 lint'],
+              ['--original-podspec=A.podspec', '指定根据某个 spec 生成二进制 spec 文件，用于同一目录下存在多个 spec 文件的情况'],
             ].concat(Pod::Command::Spec::Lint.options).concat(super).uniq
           end
 
@@ -37,6 +38,7 @@ module Pod
             @reserve_created_spec = argv.flag?('reserve-created-spec')
             @template_podspec = argv.option('template-podspec')
             @allow_prerelease = argv.flag?('allow-prerelease')
+            @original_podspec = argv.option('original-podspec')
             super
 
             @additional_args = argv.remainder!
@@ -93,6 +95,12 @@ module Pod
 
                 spec_file = if @binary
                               code_spec = Pod::Specification.from_file(code_spec_files.first)
+                              code_spec_files.each do |spec|
+                                  if @original_podspec && spec.to_s == @original_podspec
+                                    code_spec = Pod::Specification.from_file(spec)
+                                  end
+                              end
+
                               if template_spec_file
                                 template_spec = Pod::Specification.from_file(template_spec_file)
                               end
