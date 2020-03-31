@@ -25,18 +25,16 @@ module CBin
 
           build_sim_libraries(defines)
 
+          output = framework.versions_path + Pathname.new(@spec.name)
           if use_framework
-            output = framework.fwk_path + Pathname.new(@spec.name)
             build_static_framework_for_ios(output)
+            copy_headers_static
           else
-            output = framework.versions_path + Pathname.new(@spec.name)
             build_static_library_for_ios(output)
-
             copy_headers
-            copy_license
-            copy_resources
           end
-
+          copy_license
+          copy_resources
           cp_to_source_dir
         end
       end
@@ -54,6 +52,16 @@ module CBin
         UI.message 'Building simulator libraries'
         xcodebuild(defines, '-sdk iphonesimulator', 'build-simulator')
       end
+
+      def copy_headers_static
+        copy_headers
+        
+        # 如果有swift库的话, 可能缺少拷贝文件
+        `cp -fRap ./build-simulator/#{target_name}.framework/Headers/* #{framework.headers_path}/`
+        `cp -fRap ./build/#{target_name}.framework/Headers/* #{framework.headers_path}/`
+        # 拷贝modulemap
+        `cp -fRap ./build/#{target_name}.framework/Modules/* #{framework.module_map_path}/`
+      end  
 
       def copy_headers
         public_headers = @file_accessor.public_headers
@@ -151,14 +159,6 @@ module CBin
 
         # 暂时不过滤 arch, 操作的是framework里面的mach-o文件
         libs = static_libs
-
-        `rm -rf #{framework.root_path.to_s}/#{target_name}.framework`
-        # 输出之前，先拷贝framework
-        # 模拟器 -> 新建framework
-        `cp -fRap build-simulator/* #{framework.root_path.to_s}/`
-        # 真机 -> 新建framework
-        `cp -fRap build/* #{framework.root_path.to_s}/`
-        `rm -rf #{framework.root_path.to_s}/#{target_name}.framework/_CodeSignature`
 
         `lipo -create -output #{output} #{libs.join(' ')}`
       end  
