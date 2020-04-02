@@ -60,6 +60,7 @@ module CBin
         `cp -fRap ./build-simulator/#{target_name}.framework/Headers/* #{framework.headers_path}/`
         `cp -fRap ./build/#{target_name}.framework/Headers/* #{framework.headers_path}/`
         # 拷贝modulemap
+        `cp -fRap ./build-simulator/#{target_name}.framework/Modules/* #{framework.module_map_path}/`
         `cp -fRap ./build/#{target_name}.framework/Modules/* #{framework.module_map_path}/`
       end  
 
@@ -161,6 +162,12 @@ module CBin
         libs = static_libs
 
         `lipo -create -output #{output} #{libs.join(' ')}`
+
+        # `rm -rf #{framework.fwk_path}/*`
+
+        # `cp -fRap ./build/#{target_name}.framework/* #{framework.fwk_path}/`
+
+        # `lipo -create -output #{framework.fwk_path}/#{Pathname.new(@spec.name)} #{libs.join(' ')}`
       end  
 
       def build_static_library_for_ios(output)

@@ -25,8 +25,10 @@ module CBin
     end
 
     def delete_resources
-      Pathname.new(@resources_path).rmtree
-      (Pathname.new(@fwk_path) + Pathname.new('Resources')).delete
+      if @resources_path.exist?
+        Pathname.new(@resources_path).rmtree
+        (Pathname.new(@fwk_path) + Pathname.new('Resources')).delete
+      end
     end
 
     private
