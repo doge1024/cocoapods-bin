@@ -43,9 +43,15 @@ set_use_source_pods ['YYModel']
 
 ## 准备工作
 
-安装 `cocoapods-bin`：
+安装本改造版本 `cocoapods-bin`：
+
+    $ sh ./debug_install.sh
+
+安装原版 `cocoapods-bin`：
 
     $ gem install cocoapods-bin
+
+
 
 初始化插件：
 
@@ -109,6 +115,15 @@ pod bin repo push YOUR_OPTIONS
 ```
 
 如果团队内部集成了 CI 平台，那么上面的每大步都可以对应一个 CI stage，源码和二进制版本可并行发布，对应一个 stage 中的两个 job。
+
+### 注意：
+
+本版本基于 `cococapod-bin` 改造，用于直接打包 framework，而不是打包`.a` 然后合成 framework
+1. 打包静态 framework ，需要手动在 podspec 文件中添加 `s.static_framework = true`，否则是打包动态 framework
+2. 不建议包含 subspec，没有经过测试
+3. 支持打包 swift 库 (在自己公司测试了一个 swift 库，打包成静态 framework，在 Demo 中使用没有问题)
+4. 用于解决带有这个标记的情况 `use_frameworks!`
+ 
 
 ### 基本信息
 

@@ -57,12 +57,25 @@ module CBin
         copy_headers
         
         # 如果有swift库的话, 可能缺少拷贝文件
-        `cp -fRap ./build-simulator/#{Pathname.new(@spec.name)}.framework/Headers/* #{framework.headers_path}/`
-        `cp -fRap ./build/#{Pathname.new(@spec.name)}.framework/Headers/* #{framework.headers_path}/`
+        build_simulator_headers = Pathname("./build-simulator/#{Pathname.new(@spec.name)}.framework/Headers")
+        build_headers = Pathname("./build/#{Pathname.new(@spec.name)}.framework/Headers")
+        if build_headers.exist?
+          `cp -fRap #{build_simulator_headers}/* #{framework.headers_path}/`
+          `cp -fRap #{build_headers}/* #{framework.headers_path}/`
+        end
+        
         # 拷贝modulemap
-        `cp -fRap ./build-simulator/#{Pathname.new(@spec.name)}.framework/Modules/* #{framework.module_map_path}/`
-        `cp -fRap ./build/#{Pathname.new(@spec.name)}.framework/Modules/* #{framework.module_map_path}/`
-      end  
+        build_simulator_modules = Pathname("./build-simulator/#{Pathname.new(@spec.name)}.framework/Modules")
+        build_modules = Pathname("./build/#{Pathname.new(@spec.name)}.framework/Modules")
+
+        if build_modules.exist?
+          if framework.module_map_path.exist? == false
+            framework.module_map_path.mkpath
+          end
+          `cp -fRap #{build_simulator_modules}/* #{framework.module_map_path}/`
+          `cp -fRap #{build_modules}/* #{framework.module_map_path}/`
+        end
+      end
 
       def copy_headers
         public_headers = @file_accessor.public_headers
@@ -164,9 +177,7 @@ module CBin
         `lipo -create -output #{output} #{libs.join(' ')}`
 
         # `rm -rf #{framework.fwk_path}/*`
-
         # `cp -fRap ./build/#{target_name}.framework/* #{framework.fwk_path}/`
-
         # `lipo -create -output #{framework.fwk_path}/#{Pathname.new(@spec.name)} #{libs.join(' ')}`
       end  
 
