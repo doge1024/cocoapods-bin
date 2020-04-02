@@ -57,11 +57,11 @@ module CBin
         copy_headers
         
         # 如果有swift库的话, 可能缺少拷贝文件
-        `cp -fRap ./build-simulator/#{target_name}.framework/Headers/* #{framework.headers_path}/`
-        `cp -fRap ./build/#{target_name}.framework/Headers/* #{framework.headers_path}/`
+        `cp -fRap ./build-simulator/#{Pathname.new(@spec.name)}.framework/Headers/* #{framework.headers_path}/`
+        `cp -fRap ./build/#{Pathname.new(@spec.name)}.framework/Headers/* #{framework.headers_path}/`
         # 拷贝modulemap
-        `cp -fRap ./build-simulator/#{target_name}.framework/Modules/* #{framework.module_map_path}/`
-        `cp -fRap ./build/#{target_name}.framework/Modules/* #{framework.module_map_path}/`
+        `cp -fRap ./build-simulator/#{Pathname.new(@spec.name)}.framework/Modules/* #{framework.module_map_path}/`
+        `cp -fRap ./build/#{Pathname.new(@spec.name)}.framework/Modules/* #{framework.module_map_path}/`
       end  
 
       def copy_headers
@@ -148,7 +148,7 @@ module CBin
 
       def static_libs_in_sandbox(build_dir = 'build')
         if use_framework
-          Dir.glob("#{build_dir}/#{target_name}.framework/#{target_name}")
+          Dir.glob("#{build_dir}/#{Pathname.new(@spec.name)}.framework/#{Pathname.new(@spec.name)}")
         else
           Dir.glob("#{build_dir}/lib#{target_name}.a")
         end
