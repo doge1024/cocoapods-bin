@@ -200,9 +200,10 @@ module CBin
 
       def ios_architectures
         archs = %w[x86_64 arm64 armv7 armv7s i386]
-        @vendored_libraries.each do |library|
-          archs = `lipo -info #{library}`.split & archs
-        end
+        # 默认支持全平台
+        # @vendored_libraries.each do |library|
+        #   archs = `lipo -info #{library}`.split & archs
+        # end
         archs
       end
 
