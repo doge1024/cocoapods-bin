@@ -28,8 +28,9 @@ module CBin
           output = framework.versions_path + Pathname.new(@spec.name)
           if use_framework
             build_static_framework_for_ios(output)
-            copy_headers_static
+            # copy_headers_static
           else
+            output = framework.versions_path + Pathname.new(@spec.name)
             build_static_library_for_ios(output)
             copy_headers
           end
