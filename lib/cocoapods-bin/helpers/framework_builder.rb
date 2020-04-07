@@ -29,9 +29,9 @@ module CBin
             output = framework.fwk_path + Pathname.new(@spec.name)
             build_static_framework_for_ios(output)
           else
-            output = framework.versions_path + Pathname.new(@spec.name)
-            build_static_library_for_ios(output)
-            copy_headers
+            # output = framework.versions_path + Pathname.new(@spec.name)
+            # build_static_library_for_ios(output)
+            # copy_headers
           end
           copy_license
           copy_resources

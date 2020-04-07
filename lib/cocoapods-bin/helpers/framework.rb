@@ -8,7 +8,6 @@ module CBin
     attr_reader :module_map_path
     attr_reader :resources_path
     attr_reader :root_path
-    attr_reader :versions_path
     attr_reader :fwk_path
 
     def initialize(name, platform)
@@ -34,11 +33,11 @@ module CBin
     private
 
     def make_current_version
-      current_version_path = @versions_path + Pathname.new('../Current')
-      `ln -sf A #{current_version_path}`
-      `ln -sf Versions/Current/Headers #{@fwk_path}/`
-      `ln -sf Versions/Current/Resources #{@fwk_path}/`
-      `ln -sf Versions/Current/#{@name} #{@fwk_path}/`
+      # current_version_path = @versions_path + Pathname.new('../Current')
+      # `ln -sf A #{current_version_path}`
+      # `ln -sf Versions/Current/Headers #{@fwk_path}/`
+      # `ln -sf Versions/Current/Resources #{@fwk_path}/`
+      # `ln -sf Versions/Current/#{@name} #{@fwk_path}/`
     end
 
     def make_framework
@@ -46,16 +45,16 @@ module CBin
       @fwk_path.mkdir unless @fwk_path.exist?
 
       @module_map_path = @fwk_path + Pathname.new('Modules')
-      @versions_path = @fwk_path + Pathname.new('Versions/A')
+      # @versions_path = @fwk_path + Pathname.new('Versions/A')
     end
 
     def make_headers
-      @headers_path = @versions_path + Pathname.new('Headers')
+      @headers_path = @fwk_path + Pathname.new('Headers')
       @headers_path.mkpath unless @headers_path.exist?
     end
 
     def make_resources
-      @resources_path = @versions_path + Pathname.new('Resources')
+      @resources_path = @fwk_path + Pathname.new('Resources')
       @resources_path.mkpath unless @resources_path.exist?
     end
 
