@@ -20,21 +20,14 @@ module CBin
       end
 
       def build
-        UI.section("Building static framework #{@spec}") do
+        UI.section("Building dynmic framework #{@spec}") do
           defines = compile
 
           build_sim_libraries(defines)
 
-          if use_framework
-            output = framework.fwk_path + Pathname.new(@spec.name)
-            build_static_framework_for_ios(output)
-          else
-            # output = framework.versions_path + Pathname.new(@spec.name)
-            # build_static_library_for_ios(output)
-            # copy_headers
-          end
+          output = framework.fwk_path + Pathname.new(@spec.name)
+          build_dynmic_framework_for_ios(output)
           copy_license
-          copy_resources
           cp_to_source_dir
         end
       end
@@ -88,47 +81,11 @@ module CBin
           File.write("#{framework.module_map_path}/module.modulemap", module_map)
         end
       end
-
+       
       def copy_license
         UI.message 'Copying license'
         license_file = @spec.license[:file] || 'LICENSE'
         `cp "#{license_file}" .` if Pathname(license_file).exist?
-      end
-
-      def copy_resources
-        bundles = Dir.glob('./build/*.bundle')
-
-        bundle_names = [@spec, *@spec.recursive_subspecs].flat_map do |spec|
-          consumer = spec.consumer(@platform)
-          consumer.resource_bundles.keys +
-            consumer.resources.map do |r|
-              File.basename(r, '.bundle') if File.extname(r) == 'bundle'
-            end
-        end.compact.uniq
-
-        bundles.select! do |bundle|
-          bundle_name = File.basename(bundle, '.bundle')
-          bundle_names.include?(bundle_name)
-        end
-
-        if bundles.count > 0
-          UI.message "Copying bundle files #{bundles}"
-          bundle_files = bundles.join(' ')
-          `cp -rp #{bundle_files} #{framework.resources_path} 2>&1`
-        end
-
-        resources = [@spec, *@spec.recursive_subspecs].flat_map do |spec|
-          expand_paths(spec.consumer(@platform).resources)
-        end.compact.uniq
-
-        if resources.count == 0 && bundles.count == 0
-          framework.delete_resources
-          return
-        end
-        if resources.count > 0
-          UI.message "Copying resources #{resources}"
-          `cp -rp #{resources.join(' ')} #{framework.resources_path}`
-        end
       end
 
       def use_framework
@@ -139,41 +96,26 @@ module CBin
         return "#{Pathname.new(@spec.name)}.framework"
       end
 
-      def static_libs_in_sandbox(build_dir = 'build')
-        if use_framework
-          Dir.glob("#{build_dir}/#{framework_name}/#{Pathname.new(@spec.name)}")
-        else
-          Dir.glob("#{build_dir}/lib#{target_name}.a")
-        end
+      def dynmic_libs_in_sandbox(build_dir = 'build')
+        Dir.glob("#{build_dir}/#{framework_name}/#{Pathname.new(@spec.name)}")
       end
 
-      def build_static_framework_for_ios(output)
+      def build_dynmic_framework_for_ios(output)
         UI.message "Building ios libraries with archs #{ios_architectures}"
-        static_libs = static_libs_in_sandbox('build') + static_libs_in_sandbox('build-simulator') + @vendored_libraries
+        static_libs = dynmic_libs_in_sandbox('build') + dynmic_libs_in_sandbox('build-simulator') + @vendored_libraries
 
         # 暂时不过滤 arch, 操作的是framework里面的mach-o文件
         libs = static_libs
 
-        `rm -rf #{framework.root_path.to_s}/#{framework_name}`
+        `rm -rf #{framework.fwk_path}/*`
         # 输出之前，先拷贝framework
         # 模拟器 -> 新建framework
-        `cp -fRap build-simulator/* #{framework.root_path.to_s}/`
+        `cp -fRap build-simulator/#{framework_name}/* #{framework.fwk_path}/`
         # 真机 -> 新建framework
-        `cp -fRap build/* #{framework.root_path.to_s}/`
-        `rm -rf #{framework.root_path.to_s}/#{framework_name}/_CodeSignature`
-
-        `lipo -create -output #{output} #{libs.join(' ')}`
-      end  
-
-      def build_static_library_for_ios(output)
-        UI.message "Building ios libraries with archs #{ios_architectures}"
-        static_libs = static_libs_in_sandbox('build') + static_libs_in_sandbox('build-simulator') + @vendored_libraries
-
-        libs = ios_architectures.map do |arch|
-          library = "build/package-#{arch}.a"
-          `libtool -arch_only #{arch} -static -o #{library} #{static_libs.join(' ')}`
-          library
-        end
+        `cp -fRap build/#{framework_name}/* #{framework.fwk_path}/`
+        
+        # 多拷贝了资源和签名
+        `rm -rf #{framework.fwk_path}/_CodeSignature`
 
         `lipo -create -output #{output} #{libs.join(' ')}`
       end
