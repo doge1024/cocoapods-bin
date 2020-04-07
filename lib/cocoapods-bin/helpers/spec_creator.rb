@@ -125,7 +125,7 @@ module CBin
       end
 
       def framework_contents(name)
-        ["#{code_spec.root.name}.framework", "#{code_spec.root.name}.framework/Versions/A"].map { |path| "#{path}/#{name}" }
+        ["#{code_spec.root.name}.framework"].map { |path| "#{path}/#{name}" }
       end
     end
   end
