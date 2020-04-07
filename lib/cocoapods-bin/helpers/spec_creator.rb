@@ -77,7 +77,8 @@ module CBin
         @spec.source = binary_source
 
         # Source Code
-        @spec.source_files = framework_contents('Headers/*')
+        # 对应framework来说，source_files不需要吧
+        @spec.source_files = nil
         @spec.public_header_files = framework_contents('Headers/*')
 
         # Unused for binary
