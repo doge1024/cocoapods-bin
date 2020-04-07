@@ -77,12 +77,12 @@ module CBin
         @spec.source = binary_source
 
         # Source Code
-        # 对应framework来说，source_files不需要吧
-        @spec.source_files = nil
+        @spec.source_files = framework_contents('Headers/*')
         @spec.public_header_files = framework_contents('Headers/*')
 
         # Unused for binary
         spec_hash = @spec.to_hash
+
         # spec_hash.delete('license')
         spec_hash.delete('resource_bundles')
         spec_hash.delete('exclude_files')
