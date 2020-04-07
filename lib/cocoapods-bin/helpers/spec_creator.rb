@@ -77,7 +77,9 @@ module CBin
         @spec.source = binary_source
 
         # Source Code
-        @spec.source_files = framework_contents('Headers/*')
+
+        # 存在 private_header_files 的情况
+        @spec.source_files = framework_contents('Headers/*') + framework_contents('PrivateHeaders/*')
         @spec.public_header_files = framework_contents('Headers/*')
 
         # Unused for binary
