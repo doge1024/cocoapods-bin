@@ -87,9 +87,21 @@ module CBin
 
         # spec_hash.delete('license')
         spec_hash.delete('resources')
-        spec_hash.delete('resource_bundles')
         spec_hash.delete('exclude_files')
         spec_hash.delete('preserve_paths')
+
+        # 删除 一级/二级下的 resource_bundles
+        spec_hash.delete('resource_bundles')
+        spec_hash.each do |k, v|
+          if !v.nil? && v.is_a?(Hash) && v.key?("resource_bundles")
+              v.delete('resource_bundles')
+              if v.empty?
+                  spec_hash.delete(k)
+              end
+          end
+        end
+
+
         # 这里不确定 vendored_libraries 指定的时动态/静态库
         # 如果是静态库的话，需要移除，否则就不移除
         # 最好是静态库都独立成 Pod ，cocoapods-package 打静态库去 collect 目标文件时好做过滤
