@@ -23,10 +23,13 @@ module CBin
         UI.section("Building dynmic framework #{@spec}") do
           defines = compile
 
-          build_sim_libraries(defines)
+          build_sim_dynmic_framework(defines)
 
           output = framework.fwk_path + Pathname.new(@spec.name)
           build_dynmic_framework_for_ios(output)
+
+          merge_swift_header
+          copy_resources
           copy_license
           cp_to_source_dir
         end
@@ -41,44 +44,36 @@ module CBin
         `cp -fa #{@platform}/#{framework_name} #{@source_dir}`
       end
 
-      def build_sim_libraries(defines)
+      def build_sim_dynmic_framework(defines)
         UI.message 'Building simulator libraries'
         xcodebuild(defines, '-sdk iphonesimulator', 'build-simulator')
       end
 
-      def copy_headers
-        public_headers = @file_accessor.public_headers
-        UI.message "Copying public headers #{public_headers.map(&:basename).map(&:to_s)}"
+      def merge_swift_header
+        # <project>-Swift.h 需要区分模拟器和真机
+        sim_swift_header = Pathname.new("./build-simulator/#{framework_name}/Headers/#{target_name}-Swift.h")
+        iphone_swift_header = Pathname.new("./build/#{framework_name}/Headers/#{target_name}-Swift.h")
+        if sim_swift_header.exist? && iphone_swift_header.exist?
+          iphone_swift_header_file = File.new(iphone_swift_header, "r+")
+          iphone_swift_header_file.puts "// 开始"
+          iphone_swift_header_file.puts "#if TARGET_IPHONE_SIMULATOR"
 
-        public_headers.each do |h|
-          `ditto #{h} #{framework.headers_path}/#{h.basename}`
-        end
+          File.open(sim_swift_header, "r") do |file|
+            file.each_line do |line|
+              iphone_swift_header_file.puts line
+            end
+          end
 
-        # If custom 'module_map' is specified add it to the framework distribution
-        # otherwise check if a header exists that is equal to 'spec.name', if so
-        # create a default 'module_map' one using it.
-        if !@spec.module_map.nil?
-          module_map_file = @file_accessor.module_map
-          if Pathname(module_map_file).exist?
-            module_map = File.read(module_map_file)
-         end
-        elsif public_headers.map(&:basename).map(&:to_s).include?("#{@spec.name}.h")
-          module_map = <<-MAP
-          framework module #{@spec.name} {
-            umbrella header "#{@spec.name}.h"
+          iphone_swift_header_file.puts "// 中间"
+          iphone_swift_header_file.puts "#else"
+          iphone_swift_header_file.close
 
-            export *
-            module * { export * }
-          }
-          MAP
-        end
+          iphone_swift_header_file = File.new(iphone_swift_header, "a")
+          iphone_swift_header_file.puts "// 结束"
+          iphone_swift_header_file.puts "#endif"
+          iphone_swift_header_file.close
 
-        unless module_map.nil?
-          UI.message "Writing module map #{module_map}"
-          unless framework.module_map_path.exist?
-            framework.module_map_path.mkpath
-         end
-          File.write("#{framework.module_map_path}/module.modulemap", module_map)
+          `cp -fa #{iphone_swift_header} #{framework.headers_path}`
         end
       end
        
@@ -86,6 +81,16 @@ module CBin
         UI.message 'Copying license'
         license_file = @spec.license[:file] || 'LICENSE'
         `cp "#{license_file}" .` if Pathname(license_file).exist?
+      end
+
+      def copy_resources
+        bundles = Dir.glob('./build/*.bundle')
+        if bundles.count > 0
+          UI.message "Copying bundle files #{bundles}"
+          for bundle in bundles do
+            `cp -fa #{bundle} #{framework.fwk_path}`
+          end
+        end
       end
 
       def use_framework
