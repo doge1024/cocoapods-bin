@@ -54,24 +54,24 @@ module CBin
         sim_swift_header = Pathname.new("./build-simulator/#{framework_name}/Headers/#{target_name}-Swift.h")
         iphone_swift_header = Pathname.new("./build/#{framework_name}/Headers/#{target_name}-Swift.h")
         if sim_swift_header.exist? && iphone_swift_header.exist?
-          iphone_swift_header_file = File.new(iphone_swift_header, "r+")
-          iphone_swift_header_file.puts "// 开始"
-          iphone_swift_header_file.puts "#if TARGET_IPHONE_SIMULATOR"
 
-          File.open(sim_swift_header, "r") do |file|
-            file.each_line do |line|
-              iphone_swift_header_file.puts line
+          # 拼接文件
+          sim_readlines = File.readlines(sim_swift_header)
+          sim_readlines.insert(0, *["// 开始模拟器", "#if TARGET_IPHONE_SIMULATOR"])
+          sim_readlines << "// 结束模拟器"
+          sim_readlines << "#else"
+          sim_readlines << "// 开始真机"
+          sim_readlines << File.readlines(iphone_swift_header)
+          sim_readlines << "// 结束真机"
+          sim_readlines << "#endif"
+
+          # 清空源文件
+          File.open(iphone_swift_header, "w+") do |aFile|
+            # 写入
+            for line in sim_readlines do
+              aFile.puts line
             end
           end
-
-          iphone_swift_header_file.puts "// 中间"
-          iphone_swift_header_file.puts "#else"
-          iphone_swift_header_file.close
-
-          iphone_swift_header_file = File.new(iphone_swift_header, "a")
-          iphone_swift_header_file.puts "// 结束"
-          iphone_swift_header_file.puts "#endif"
-          iphone_swift_header_file.close
 
           `cp -fa #{iphone_swift_header} #{framework.headers_path}`
         end
