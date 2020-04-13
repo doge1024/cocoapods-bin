@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['triplec.linux@gmail.com']
   spec.description   = %q{cocoapods-bin is a plugin which helps develpers switching pods between source code and binary.}
   spec.summary       = %q{cocoapods-bin is a plugin which helps develpers switching pods between source code and binary.}
-  spec.homepage      = 'https://github.com/tripleCC/cocoapods-bin'
+  spec.homepage      = 'https://github.com/doge1024/cocoapods-bin-framework'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files`.split($/)

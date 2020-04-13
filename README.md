@@ -1,14 +1,22 @@
-# cocoapods-bin
+# cocoapods-bin-framework
 
 组件二进制化插件。
 
 ### 注意：
 
-本版本基于 `cococapod-bin` 改造，用于直接打包 动态framework，而不是打包`.a` 然后合成 framework
+本版本基于 `cococapod-bin` 改造，用于打包 动态framework
+1. 使用本仓库，需要卸载 cococapod-bin
 1. 需要去掉`s.static_framework = true`
 2. 不建议包含 subspec，没有经过测试
 3. 支持打包 swift 库 (在自己公司测试了一个 swift 库，使用没有问题)
-4. 用于解决带有这个标记的情况 `use_frameworks!`
+4. 用于解决带有这个标记的情况 `use_frameworks!`, 以及改成静态库后资源路径的问题
+
+
+> 安装本改造版本 `cocoapods-bin`：
+
+    $ sh ./debug_install.sh
+
+其余按照原版操作即可
 
 ---
 
@@ -52,10 +60,6 @@ set_use_source_pods ['YYModel']
 推荐结合 GitLab CI  使用本插件，可以实现自动打包发布，并显著减少其 pipeline 耗时。关于 GitLab CI 的实践，可以参考 [火掌柜 iOS 团队 GitLab CI 集成实践](https://triplecc.github.io/2018/06/23/2018-06-23-ji-gitlabcide-ci-shi-jian/)。虽然后来对部分 stage 和脚本都进行了优化，但总体构建思路还是没变的。
 
 ## 准备工作
-
-安装本改造版本 `cocoapods-bin`：
-
-    $ sh ./debug_install.sh
 
 安装原版 `cocoapods-bin`：
 
