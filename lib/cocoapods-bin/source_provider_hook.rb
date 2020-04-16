@@ -2,7 +2,7 @@
 
 require 'cocoapods-bin/native/sources_manager'
 
-Pod::HooksManager.register('cocoapods-bin', :pre_install) do |_context, _|
+Pod::HooksManager.register('cocoapods-bindyf', :pre_install) do |_context, _|
   require 'cocoapods-bin/native'
 
   # 同步 BinPodfile 文件
@@ -24,7 +24,7 @@ Pod::HooksManager.register('cocoapods-bin', :pre_install) do |_context, _|
   end
 end
 
-Pod::HooksManager.register('cocoapods-bin', :source_provider) do |context, _|
+Pod::HooksManager.register('cocoapods-bindyf', :source_provider) do |context, _|
   sources_manager = Pod::Config.instance.sources_manager
   podfile = Pod::Config.instance.podfile
 
