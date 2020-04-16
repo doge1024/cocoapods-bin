@@ -14,9 +14,9 @@
 
 > 安装本改造版本 `cocoapods-bin`：
 
-    $ sh ./debug_install.sh
+    $ gem install cocoapods-bindyf
 
-其余按照原版操作即可
+其余配置命令按照原版操作即可
 
 ---
 
@@ -63,7 +63,7 @@ set_use_source_pods ['YYModel']
 
 安装原版 `cocoapods-bin`：
 
-    $ gem install cocoapods-bin
+    $ gem install cocoapods-bindyf
 
 
 
