@@ -16,6 +16,11 @@
 
     $ gem install cocoapods-bindyf
 
+> Podfile 中使用：
+
+    $ plugin 'cocoapods-bindyf'
+    
+
 其余配置命令按照原版操作即可
 
 ---
