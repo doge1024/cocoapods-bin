@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'cocoapods-bin/gem_version.rb'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'cocoapods-bin'
+  spec.name          = 'cocoapods-bindyf'
   spec.version       = CBin::VERSION
   spec.authors       = ['tripleCC']
   spec.email         = ['triplec.linux@gmail.com']
